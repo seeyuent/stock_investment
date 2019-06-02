@@ -1,0 +1,52 @@
+import pandas as pd
+import re
+import os
+
+path='C:/Users/User/Desktop/data_mining/annual_report/'
+files=[]
+for r,d,f in os.walk(path):
+    for file in f:
+        files.append(os.path.join(r,file))
+for f in files:
+    print (f)
+#append all files together
+ratio = []
+for i in files:
+    df = pd.read_excel(i)
+    ratio.append(df)
+ratio = pd.concat(ratio, axis = 0)
+
+ratio['debt ratio']=ratio['total liabilities']/ratio['total assets']
+ratio['debt-to-equity']=ratio['total liabilities']/ratio['total equity']
+
+debt=[]
+for i in ratio['debt ratio']:
+    if i >1:
+        debt_ratio= "High risk"
+    elif (i >=0.5 and i <=1):
+        debt_ratio= "Medium risk"
+    else:
+       debt_ratio= "Low risk"
+    debt.append(debt_ratio)
+ratio['debt']=debt
+
+debt2equity=[]
+for i in ratio['debt-to-equity']:
+    if i >1.5:
+        debt_ratio= "High risk"
+    elif (i >=0.5 and i <=1.0):
+        debt_ratio= "Medium risk"
+    else:
+       debt_ratio= "Low risk"
+    debt2equity.append(debt_ratio)
+ratio['debt2equity']=debt2equity
+
+
+d_summary=ratio.groupby(['debt']).count()
+d2e_summary=ratio.groupby(['debt2equity']).count()
+
+debt_summary=d_summary['name']
+debt2equity_summary=d2e_summary['name']
+
+finalised=ratio[['name','debt','debt2equity']]
+finalised.to_csv(r"C:\Users\User\Desktop\data_mining\coding\report interpretation.csv")
