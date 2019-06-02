@@ -2,19 +2,7 @@ import pandas as pd
 import re
 import os
 
-path='C:/Users/User/Desktop/data_mining/annual_report/'
-files=[]
-for r,d,f in os.walk(path):
-    for file in f:
-        files.append(os.path.join(r,file))
-for f in files:
-    print (f)
-#append all files together
-ratio = []
-for i in files:
-    df = pd.read_excel(i)
-    ratio.append(df)
-ratio = pd.concat(ratio, axis = 0)
+ratio = pd.read_csv('https://github.com/seeyuent/stock_investment/blob/master/annual%20report.xlsx')
 
 ratio['debt ratio']=ratio['total liabilities']/ratio['total assets']
 ratio['debt-to-equity']=ratio['total liabilities']/ratio['total equity']
