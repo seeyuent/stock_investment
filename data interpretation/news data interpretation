@@ -1,0 +1,86 @@
+import pandas as pd
+from textblob import TextBlob
+import numpy as np
+from snownlp import SnowNLP
+import re
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import os
+
+path='C:/Users/User/Desktop/data_mining/klse news/'
+files=[]
+for r,d,f in os.walk(path):
+    for file in f:
+        files.append(os.path.join(r,file))
+for f in files:
+    print (f)
+#append all files together
+appended_data = []
+for i in files:
+    df = pd.read_csv(i)
+    appended_data.append(df)
+appended_data = pd.concat(appended_data, axis = 0)
+
+appended_data['extract_code']=appended_data['code'].str[-4:]
+
+news = appended_data.sort_values('extract_code',ascending=True).drop_duplicates(['news'],keep='first')
+
+#extract date
+news['extracted_date']=news.date.str.extract(r'(\d{2}\s[A-Z][a-z]{2},\s\d{4})')
+
+#remove news that before 25 Feb 2019
+news['extracted_date']=pd.to_datetime(news['extracted_date'])
+res = news[~(news['extracted_date']<'25 Feb, 2019')]
+
+res.to_csv(r"C:\Users\User\Desktop\data_mining\processed_news.csv")
+
+a = pd.read_csv(r"C:\Users\User\Desktop\data_mining\processed_news.csv",index_col=0)
+b = pd.read_csv(r"C:\Users\User\Desktop\data_mining\coding\klse_stat.csv")
+
+b_new=b.rename(columns={"code":"extract_code"})
+df=pd.merge(a,b_new[['extract_code','category']],on='extract_code',how='left')
+
+df.loc[:,~df.columns.str.contains('^Unnamed')]
+
+def is_chinese(word):
+    for ch in word:
+        if (ch >= '\u4e00' and ch <='\u9fff'):
+            return "Chinese"
+    return "English"
+
+def analize_sentiment_raw(headline):
+    analysis = TextBlob(headline)
+    return analysis.sentiment.polarity
+
+chinese=[]
+for i in df['news']:
+    chinese.append(is_chinese(i))
+df['language']=chinese
+
+chinese=df['language']=="Chinese"
+english=df['language']=="English"
+
+chinese_news=df[chinese]
+english_news=df[english]
+
+chinese_SA=[]
+english_SA=[]
+for ch in chinese_news['news']:
+    SA=SnowNLP(ch).sentiments
+    chinese_SA.append(SA)
+for eng in english_news['news']:
+    SA=analize_sentiment_raw(eng)
+    english_SA.append(SA)
+    
+chinese_news['chinese_SA']=np.array(chinese_SA)
+english_news['english_SA']=np.array(english_SA)
+#df_clean.to_csv(r"C:\Users\User\Desktop\data_mining\coding\news_polarity.csv")
+chinese_summary=chinese_news.groupby(['category']).mean().reset_index()
+english_summary=english_news.groupby(['category']).mean().reset_index()
+
+chinese_summary1=chinese_news.groupby(['extract_code','extracted_date']).mean().reset_index()
+english_summary1=english_news.groupby(['extract_code','extracted_date']).mean().reset_index()
+
+
+news_summary=pd.merge(chinese_summary,english_summary[['category','english_SA']],on=('category'),how='left')
+news_summary1=pd.merge(chinese_summary1,english_summary1[['extract_code','extracted_date','english_SA']],on=('extract_code','extracted_date'),how='left')
