@@ -37,4 +37,4 @@ debt_summary=d_summary['name']
 debt2equity_summary=d2e_summary['name']
 
 finalised=ratio[['name','debt','debt2equity']]
-finalised.to_csv(r"C:\Users\User\Desktop\data_mining\coding\report interpretation.csv")
+finalised.to_csv("report interpretation.csv")
