@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-df=pd.read_csv(r'C:\Users\User\Desktop\data_mining\coding\klse_stat.csv',thousands=',')
+df=pd.read_csv('https://raw.githubusercontent.com/seeyuent/stock_investment/master/klse_stat.csv',thousands=',')
 
 #remove % sign in DY
 df['DY']=df['DY'].map(lambda x:str(x)[:-1])
@@ -51,5 +51,5 @@ c_pe=[(df['overall']>=7),(df['overall']>=3),(df['overall']>0)]
 d_pe=["Low","Medium","High"]
 df['RISK']=np.select(c_pe,d_pe,default=np.nan)
 
-df.to_csv(r"C:\Users\User\Desktop\data_mining\coding\klse interpretation.csv")
+df.to_csv("klse interpretation.csv")
 
