@@ -1,0 +1,55 @@
+import datetime as dt
+import matplotlib.pyplot as plt
+from matplotlib import style
+import pandas as pd
+from mpl_finance import candlestick_ohlc
+import matplotlib.dates as mdates
+import numpy as np
+
+style.use('ggplot')
+
+df=pd.read_csv(r"C:\Users\User\Desktop\data_mining\coding\labelled_price.csv",index_col=0)
+
+df['date']=pd.to_datetime(df.date)
+df["date"] = df["date"].apply(mdates.date2num)
+df.replace('-',np.NaN,regex=True,inplace=True)
+df['open']=df['open'].astype(float)
+df['high']=df['high'].astype(float)
+df['low']=df['low'].astype(float)
+df['close']=df['close'].astype(float)
+print(df.dtypes)
+
+def PPSR(data):  
+    PP = pd.Series((data['high'] + data['low'] + data['close']) / 3)  
+    R1 = pd.Series(2 * PP - data['low'])  
+    S1 = pd.Series(2 * PP - data['high'])  
+    R2 = pd.Series(PP + data['high'] - data['low'])  
+    S2 = pd.Series(PP - data['high'] + data['low'])  
+    R3 = pd.Series(data['high'] + 2 * (PP - data['low']))  
+    S3 = pd.Series(data['low'] - 2 * (data['high'] - PP))  
+    psr = {'PP':PP, 'R1':R1, 'S1':S1, 'R2':R2, 'S2':S2, 'R3':R3, 'S3':S3}  
+    PSR = pd.DataFrame(psr)  
+    data= data.join(PSR)  
+    return data
+
+groups=df.groupby('code')
+gb=groups.groups
+key_list_from_gb=['8176']
+
+for key,values in gb.items():
+    if key in key_list_from_gb:
+        a=df.ix[values]
+        #print(df.ix[values],"\n\n")
+        ohlc=a[['date','open','high','low','close']]
+        f1, ax = plt.subplots(figsize = (10,5))
+        candlestick_ohlc(ax, ohlc.values.tolist(), width=.6, colorup='green', colordown='red')  
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        plt.title(key)
+        plt.xlabel('Day')
+        plt.ylabel('Price')
+        plt.show()
+        LL=PPSR(ohlc)
+        #print(LL)
+        pd.concat([ohlc['close'],LL.PP,LL.R1,LL.S1],axis=1).plot(figsize=(12,9),grid=True)
+        plt.legend(['Close Price','Pivot Point','Resistance','Support'])
+        plt.show()
