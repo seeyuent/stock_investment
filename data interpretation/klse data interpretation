@@ -1,0 +1,55 @@
+import pandas as pd
+import numpy as np
+
+df=pd.read_csv(r'C:\Users\User\Desktop\data_mining\coding\klse_stat.csv',thousands=',')
+
+#remove % sign in DY
+df['DY']=df['DY'].map(lambda x:str(x)[:-1])
+df['DY']=df['DY'].astype(float)
+
+summary=df.groupby(['category']).mean().reset_index()
+df=pd.merge(df,summary,on='category',how='left',suffixes=('','_mean'))
+
+#PE
+c_pe=[(df['P/E']<0),(df['P/E']<=df['P/E_mean']),(df['P/E']>df['P/E_mean'])]
+d_pe=["0","2","1"]
+
+df['PE result']=np.select(c_pe,d_pe,default=np.nan)
+
+#PSR
+c_pe=[(df['PSR']<0),(df['PSR']<=df['PSR_mean']),(df['PSR']>df['PSR_mean'])]
+d_pe=["0","2","1"]
+
+df['PSR result']=np.select(c_pe,d_pe,default=np.nan)
+
+#ROE
+c_pe=[(df['ROE']<0),(df['ROE']<=df['ROE_mean']),(df['ROE']>df['ROE_mean'])]
+d_pe=["0","2","1"]
+
+df['ROE result']=np.select(c_pe,d_pe,default=np.nan)
+
+#PTBV
+c_pe=[(df['PTBV']<0),(df['PTBV']<=df['PTBV_mean']),(df['PTBV']>df['PTBV_mean'])]
+d_pe=["0","2","1"]
+
+df['PTBV result']=np.select(c_pe,d_pe,default=np.nan)
+
+#DY
+c_pe=[(df['DY']<=0),(df['DY']>=6),(df['DY']>3),df['DY']>0]
+d_pe=["0","2","1","0"]
+
+df['DY result']=np.select(c_pe,d_pe,default=np.nan)
+
+df['PE result']=df['PE result'].astype(float)
+df['PSR result']=df['PSR result'].astype(float)
+df['ROE result']=df['ROE result'].astype(float)
+df['PTBV result']=df['PTBV result'].astype(float)
+df['DY result']=df['DY result'].astype(float)
+col_names=['PE result','PSR result','ROE result','PTBV result','DY result']
+df['overall']=df[col_names].sum(axis=1)
+c_pe=[(df['overall']>=7),(df['overall']>=3),(df['overall']>0)]
+d_pe=["Low","Medium","High"]
+df['RISK']=np.select(c_pe,d_pe,default=np.nan)
+
+df.to_csv(r"C:\Users\User\Desktop\data_mining\coding\klse interpretation.csv")
+
